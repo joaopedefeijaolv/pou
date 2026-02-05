@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jogo-Teste</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #87ceeb;
+}
+canvas {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+<canvas id="c"></canvas>
+
+<script>
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+
+function resize(){
+  c.width = innerWidth;
+  c.height = innerHeight;
+}
+resize();
+addEventListener("resize", resize);
+
+// IMAGENS
+const pou = new Image();
+pou.src = "img/pou.png";
+
+const arvore = new Image();
+arvore.src = "img/arvore.png";
+
+// JOGADOR
+let y = 0;
+let vy = 0;
+let chão;
+let morto = false;
+let score = 0;
+
+// OBSTÁCULOS
+let arvores = [];
+
+// TOQUE = PULAR / RESTART
+addEventListener("touchstart", jogar);
+addEventListener("click", jogar);
+
+function jogar(){
+  if (!morto) {
+    if (y >= chão) vy = -22;
+  } else {
+    reset();
+  }
+}
+
+function reset(){
+  arvores = [];
+  score = 0;
+  morto = false;
+  y = chão;
+  vy = 0;
+  loop();
+}
+
+function loop(){
+  ctx.clearRect(0,0,c.width,c.height);
+
+  chão = c.height - 120;
+
+  // chão
+  ctx.fillStyle = "#654321";
+  ctx.fillRect(0, chão + 60, c.width, 60);
+
+  // gravidade
+  vy += 1.2;
+  y += vy;
+  if (y > chão) {
+    y = chão;
+    vy = 0;
+  }
+
+  // Pou
+  ctx.drawImage(pou, 80, y, 80, 80);
+
+  // criar árvores
+  if (Math.random() < 0.02) {
+    arvores.push({ x: c.width, y: chão });
+  }
+
+  // mover árvores
+  for (let a of arvores) {
+    a.x -= 10;
+    ctx.drawImage(arvore, a.x, a.y, 60, 100);
+
+    // colisão
+    if (
+      a.x < 140 &&
+      a.x + 60 > 80 &&
+      y + 80 > a.y
+    ) {
+      morto = true;
+    }
+  }
+
+  arvores = arvores.filter(a => a.x > -80);
+
+  // score
+  ctx.fillStyle = "#000";
+  ctx.font = "20px Arial";
+  ctx.fillText("Score: " + score, 20, 30);
+  score++;
+
+  if (!morto) {
+    requestAnimationFrame(loop);
+  } else {
+    ctx.font = "40px Arial";
+    ctx.fillText("GAME OVER", c.width/2 - 120, c.height/2);
+    ctx.font = "20px Arial";
+    ctx.fillText("Toque para recomeçar", c.width/2 - 110, c.height/2 + 40);
+  }
+}
+
+loop();
+</script>
+</body>
+</html>
